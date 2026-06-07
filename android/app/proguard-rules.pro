@@ -2,6 +2,10 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
+# Suppress Play Core warnings — referenced by Flutter's
+# PlayStoreDeferredComponentManager, which this app does not use.
+-dontwarn com.google.android.play.core.**
+
 # flutter_secure_storage
 -keep class androidx.security.crypto.** { *; }
 
