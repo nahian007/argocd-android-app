@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'services/argocd_service.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/apps_screen.dart';
@@ -71,13 +72,27 @@ class _SplashRouterState extends State<_SplashRouter> {
     if (!mounted) return;
 
     final authService = AuthService();
-    final loggedIn = await authService.isLoggedIn();
+    var destination = const LoginScreen() as Widget;
+
+    if (await authService.isLoggedIn()) {
+      // Don't flash the dashboard if the stored token is stale — verify with
+      // the server first. On network errors we trust the token and let the
+      // AppsScreen handle the failure (so an offline launch still works).
+      try {
+        final valid = await ArgoCDService(authService).validateSession();
+        if (valid) {
+          destination = const AppsScreen();
+        } else {
+          await authService.logout();
+        }
+      } catch (_) {
+        destination = const AppsScreen();
+      }
+    }
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => loggedIn ? const AppsScreen() : const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => destination),
     );
   }
 

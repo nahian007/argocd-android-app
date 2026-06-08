@@ -89,6 +89,21 @@ class ArgoCDService {
     throw ArgoCDException(errorMsg, statusCode: response.statusCode);
   }
 
+  /// Cheap authenticated probe used by the splash router to verify the
+  /// stored token is still accepted by the server. Returns true on 2xx,
+  /// false only on 401. Network / timeout / other errors propagate so the
+  /// caller can keep the user on the app screen instead of kicking them
+  /// to login just because they're offline.
+  Future<bool> validateSession() async {
+    try {
+      await _get('/session/userinfo');
+      return true;
+    } on ArgoCDException catch (e) {
+      if (e.statusCode == 401) return false;
+      rethrow;
+    }
+  }
+
   /// List all applications
   Future<List<ArgoApp>> listApplications() async {
     final data = await _get('/applications');
