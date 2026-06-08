@@ -13,10 +13,9 @@ dependencies:
   # HTTP
   http: ^1.2.1
 
-  # OIDC sign-in via Chrome Custom Tabs (uses the user's existing browser
-  # session, so signing in to Google in the app is one-tap when the user
-  # is already signed in to Chrome).
-  flutter_appauth: ^6.0.3
+  # WebView for SSO login
+  webview_flutter: ^4.7.0
+  webview_flutter_android: ^3.16.0
 
   # Secure token storage
   flutter_secure_storage: ^9.2.2

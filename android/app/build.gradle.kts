@@ -22,11 +22,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        // Picked up by flutter_appauth's manifest to register the OAuth
-        // redirect URI as an intent-filter. Must match the redirect URI
-        // we use in Dart: <scheme>:/oauthredirect.
-        manifestPlaceholders["appAuthRedirectScheme"] = applicationId!!
     }
 
     buildTypes {

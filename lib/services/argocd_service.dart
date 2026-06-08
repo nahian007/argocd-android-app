@@ -21,7 +21,7 @@ class ArgoCDService {
   ArgoCDService(this._authService);
 
   Future<Map<String, String>> _headers() async {
-    final token = await _authService.getValidIdToken();
+    final token = await _authService.getToken();
     return {
       'Content-Type': 'application/json',
       if (token != null && token.isNotEmpty)
@@ -163,7 +163,7 @@ class ArgoCDService {
     String? container,
     int tailLines = 200,
   }) async* {
-    final token = await _authService.getValidIdToken();
+    final token = await _authService.getToken();
     final params = <String, String>{
       'tailLines': tailLines.toString(),
       'follow': 'false',
