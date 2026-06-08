@@ -5,6 +5,21 @@ allprojects {
     }
 }
 
+// Force-bump stale compileSdk values on Flutter plugins (e.g. flutter_appauth
+// pins 31, but a transitive androidx.fragment dep requires 34+). Must be
+// registered before any block that triggers subproject evaluation.
+subprojects {
+    afterEvaluate {
+        if (plugins.hasPlugin("com.android.library")) {
+            extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
+                if ((compileSdk ?: 0) < 34) {
+                    compileSdk = 35
+                }
+            }
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

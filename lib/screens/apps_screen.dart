@@ -125,7 +125,7 @@ class _AppsScreenState extends State<AppsScreen> {
   @override
   Widget build(BuildContext context) {
     // Hide the dashboard while logout is in flight so the user doesn't
-    // briefly see the apps list during the cookie-clear + secure-storage delete.
+    // briefly see the apps list during the secure-storage delete.
     if (_loggingOut) return const SplashView();
 
     final hasFilters = _filterSync != null || _filterHealth != null;
