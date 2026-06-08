@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/argocd_app.dart';
 import '../services/argocd_service.dart';
 import '../services/auth_service.dart';
+import '../widgets/splash_view.dart';
 import '../widgets/status_badge.dart';
 import 'app_detail_screen.dart';
 import 'login_screen.dart';
@@ -20,6 +21,7 @@ class _AppsScreenState extends State<AppsScreen> {
   List<ArgoApp> _allApps = [];
   List<ArgoApp> _filteredApps = [];
   bool _loading = true;
+  bool _loggingOut = false;
   String? _error;
   String _search = '';
   SyncStatus? _filterSync;
@@ -89,6 +91,8 @@ class _AppsScreenState extends State<AppsScreen> {
   }
 
   Future<void> _logout() async {
+    if (_loggingOut) return;
+    setState(() => _loggingOut = true);
     await _authService.logout();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -120,6 +124,10 @@ class _AppsScreenState extends State<AppsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Hide the dashboard while logout is in flight so the user doesn't
+    // briefly see the apps list during the cookie-clear + secure-storage delete.
+    if (_loggingOut) return const SplashView();
+
     final hasFilters = _filterSync != null || _filterHealth != null;
 
     return Scaffold(

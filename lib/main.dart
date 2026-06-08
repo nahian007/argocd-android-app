@@ -4,6 +4,7 @@ import 'services/argocd_service.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/apps_screen.dart';
+import 'widgets/splash_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,40 +98,5 @@ class _SplashRouterState extends State<_SplashRouter> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF1a1a2e),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.rocket_launch,
-              color: Color(0xFFe94560),
-              size: 64,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'ArgoCD',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'shopup.center',
-              style: TextStyle(color: Colors.white38, fontSize: 14),
-            ),
-            SizedBox(height: 32),
-            CircularProgressIndicator(
-              color: Color(0xFFe94560),
-              strokeWidth: 2,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const SplashView();
 }

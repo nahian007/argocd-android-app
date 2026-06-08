@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../services/auth_service.dart';
+import '../widgets/splash_view.dart';
 import 'apps_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,6 +16,10 @@ class _LoginScreenState extends State<LoginScreen> {
   late final WebViewController _controller;
   final AuthService _authService = AuthService();
   bool _isLoading = true;
+  // Flips on the first onPageFinished. While false we keep the WebView
+  // hidden behind a full splash so the auth redirect chain (argocd →
+  // /auth/login → Google) doesn't flash any intermediate UI.
+  bool _firstPageReady = false;
   bool _tokenExtracted = false;
 
   @override
@@ -44,7 +49,12 @@ class _LoginScreenState extends State<LoginScreen> {
             if (mounted) setState(() => _isLoading = true);
           },
           onPageFinished: (url) async {
-            if (mounted) setState(() => _isLoading = false);
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _firstPageReady = true;
+              });
+            }
             await _tryExtractToken(url);
           },
           onWebResourceError: (error) {
@@ -181,7 +191,9 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          if (_isLoading)
+          // Translucent spinner overlay for subsequent loads (after the
+          // first page is up and the WebView is visible).
+          if (_isLoading && _firstPageReady)
             Container(
               color: const Color(0xFF1a1a2e).withOpacity(0.3),
               child: const Center(
@@ -190,6 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          // Full-bleed splash until the first page finishes — hides the
+          // initial blank WebView and the brief auth-redirect flashes.
+          if (!_firstPageReady) const Positioned.fill(child: SplashView()),
         ],
       ),
     );
