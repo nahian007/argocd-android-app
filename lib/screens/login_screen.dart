@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../services/auth_service.dart';
 import 'apps_screen.dart';
@@ -22,9 +23,20 @@ class _LoginScreenState extends State<LoginScreen> {
     _initWebView();
   }
 
+  // Mobile Chrome UA without the WebView "; wv)" token. Bypasses Google's
+  // disallowed_useragent block while letting ArgoCD serve its mobile layout.
+  static const _mobileUserAgent =
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+
+  // Native channel into Android's CookieManager — reads HttpOnly cookies
+  // that JS can't see. Matches the channel name in MainActivity.kt.
+  static const _cookieChannel = MethodChannel('com.shopup.argocd_mobile/cookies');
+
   void _initWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setUserAgent(_mobileUserAgent)
       ..setBackgroundColor(const Color(0xFF1a1a2e))
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -73,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // localStorage not available yet — retry on next navigation
     }
 
-    // Fallback: try reading from cookie via JS
+    // Fallback 1: read from cookie via JS (only works if the cookie isn't HttpOnly)
     try {
       final cookieResult = await _controller.runJavaScriptReturningResult(
         r"""
@@ -88,9 +100,28 @@ class _LoginScreenState extends State<LoginScreen> {
         _tokenExtracted = true;
         await _authService.saveToken(cookie);
         if (mounted) _navigateToApps();
+        return;
       }
     } catch (_) {
       // Not available yet
+    }
+
+    // Fallback 2: read from Android's CookieManager via platform channel.
+    // ArgoCD sets argocd.token as HttpOnly so JS cannot see it, but the
+    // WebView's underlying cookie store does.
+    try {
+      final value = await _cookieChannel.invokeMethod<String>(
+        'getCookieValue',
+        {'url': AuthService.baseUrl, 'name': 'argocd.token'},
+      );
+      if (value != null && value.isNotEmpty) {
+        _tokenExtracted = true;
+        await _authService.saveToken(value);
+        if (mounted) _navigateToApps();
+        return;
+      }
+    } catch (_) {
+      // Channel unavailable; will retry on next page load
     }
   }
 
